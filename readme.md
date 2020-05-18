@@ -64,5 +64,5 @@ customConnecteNodes:Array,自定义连接点,
 
 ```
 
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
+### 交友连接
+点击 [GitHub](https://github.com/GuniBMB/BpmnJS).
