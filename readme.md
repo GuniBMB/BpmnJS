@@ -1,5 +1,8 @@
 # a-bpmn自定义封装
-功能点
+
+利用vue封装Bpmn，用以实现加载Bpmn数据，绘制流程图。
+
+## 功能点
 
  1、重写了drawShape和drawConnect函数，简单实现了自定义连接线和节点样式；
 
@@ -7,7 +10,7 @@
 
 
 ## 程序安装
-###配置和依赖：
+### 配置和依赖：
 ``` javascript
 /**
 依赖包：
@@ -21,13 +24,13 @@
 }
 /**
 webpack配置：
- config.module
+*/
+  config.module
     .rule('raw-loader')
     .test(/.(bpmn|xml)$/)
     .use('raw-loader')
     .loader('raw-loader')
     .end()
-*/
 ```
 ### 安装
 ```
@@ -62,7 +65,6 @@ customConnecteNodes:Array,自定义连接点,
     ]
 **/
 
-```
 
 ### 交友连接
 点击 [GitHub](https://github.com/GuniBMB/BpmnJS).

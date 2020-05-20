@@ -47,6 +47,7 @@
         },
         methods:{
             ini(){
+                this.iniParamas();
                 const canvas = this.$refs.canvas;
                 // 定义建模器
                 let customModule = this.iniCustomModule();
@@ -58,6 +59,9 @@
                 });
                 // 建模
                 this.createNewDiagram();
+            },
+            iniParamas(){
+
             },
             /**
              * 根据bpmn数据创建图像
@@ -86,8 +90,20 @@
                     modeling = this.bpmnModeler.get('modeling');
                     source = elementRegistry.get(sourceID);
                     target =  elementRegistry.get(targetID);
-                    console.log('this.bpmnModeler',this.bpmnModeler.get('modeling'));
-                    modeling.connect(source, target, attrs, null);
+                   /* *
+                    创建连接之前需要判断当前两个节点的连接线是否已存在，
+                    如果存在则不创建,反之则创建连线
+                   **/
+                    let existConnects = elementRegistry.getAll().filter(e=>e.type == "bpmn:SequenceFlow");
+                    let isConnectExist = existConnects.find(e=>e.source.id == sourceID && e.target.id == targetID);
+                    if(isConnectExist){
+                       return;
+                    }else {
+                        let cusConnect = modeling.connect(source, target, attrs, null);
+                        // cusConnect.labels.add('test')
+
+                    }
+
                 }catch (e) {
                     console.log(e);
                 }
@@ -98,7 +114,10 @@
              * */
             iniCustomModule(){
                let me = this;
-               let CustomRenderer = me.iniCustomRenderer();
+                let hasFinishedNodes = me.hasFinishedNodes||[];
+                let noteFinishedNodes =  me.noteFinishedNodes||[];
+                let customConnectNodes = me.customConnecteNodes||[];
+               let CustomRenderer = me.iniCustomRenderer(hasFinishedNodes,noteFinishedNodes,customConnectNodes);
                return {
                    __init__: ['customRenderer'],
                    customRenderer: ['type', CustomRenderer]
@@ -107,11 +126,8 @@
             /**
              * 构建自定义渲染器
              * */
-            iniCustomRenderer(){
+            iniCustomRenderer(hasFinishedNodes,noteFinishedNodes,customConnectNodes){
                 let me = this;
-                let hasFinishedNodes = me.hasFinishedNodes||[];
-                let noteFinishedNodes =  me.noteFinishedNodes||[];
-
                 class CustomRenderer extends BaseRenderer {
                     constructor(eventBus, bpmnRenderer, modeling) {
                         super(eventBus, HIGH_PRIORITY);
@@ -124,14 +140,10 @@
                     }
                     drawShape(parentNode, element) {
                         const type = element.type // 获取到类型
-                        // console.log('element',element)
-                        // console.log('node',parentNode)
+
                         let id  = element.id;
                         const shape = this.bpmnRenderer.drawShape(parentNode, element);
                         if(id && hasFinishedNodes.includes(id)){
-                            this.customRenderShape(parentNode,type,'red',shape)
-                        }
-                        if(id && noteFinishedNodes.includes(id)){
                             this.customRenderShape(parentNode,type,'blue',shape)
                         }
                         return shape
@@ -140,10 +152,10 @@
                         let id  = element.id;
                         const connection = this.bpmnRenderer.drawConnection(parentGfx,element);
                         if(id && hasFinishedNodes.includes(id)){
-                            this.customRenderConnection(parentGfx,connection,'red','redTriangle');
+                            this.customRenderConnection(parentGfx,connection,'blue','redTriangle');
                         }
-                        if(id && noteFinishedNodes.includes(id)){
-                            this.customRenderConnection(parentGfx,connection,'blue','blueTriangle');
+                        if(id && customConnectNodes.map(e=>e.id).includes(id)){
+                            this.drawDashesLine(parentGfx,connection,'blue','blueTriangle');
                         }
                         return connection;
                     }
@@ -192,17 +204,34 @@
                             markerHeight:"10",
                             orient:"auto",
                         });
+                        let path = svgCreate('path');
 
-                        let path = svgCreate('path',{
-                            d:'M 1 5 L 11 10 L 1 15 Z',
-                            style:`fill: ${color}; stroke-width: 1px; stroke-linecap: round; stroke-dasharray: 10000, 1; stroke:${color};`
+                        marker.append(path);
+                        defs.append(marker);
+                        parentGfx.append(defs);
+                        svgAttr(connection, 'stroke',color);
+                        svgAttr(connection, 'marker-end',`url("#${markerID}")`);
+                    }
+
+                    drawDashesLine(parentGfx,connection,color,markerID){
+                        let defs = svgCreate('defs');
+                        let marker = svgCreate('marker',{
+                            id:markerID,
+                            viewBox:"0 0 20 20",
+                            refX:"11",
+                            refY:"10",
+                            markerWidth:"10",
+                            markerHeight:"10",
+                            orient:"auto",
                         });
+                        let path = svgCreate('path');
 
                         marker.append(path);
                         defs.append(marker);
                         parentGfx.append(defs);
 
                         svgAttr(connection, 'stroke',color);
+                        svgAttr(connection, 'stroke-dasharray','5,5');
                         svgAttr(connection, 'marker-end',`url("#${markerID}")`);
                     }
                 }
@@ -241,7 +270,8 @@
                     this.customConnecteNodes.forEach(e=>{
                         let attrs= {
                             id:e.id,
-                            type: "bpmn:SequenceFlow"
+                            type: "bpmn:SequenceFlow",
+                            // label:'test'
                         };
                         this.createCustomConnect(e.sourceID,e.targetID,attrs)
                     })
