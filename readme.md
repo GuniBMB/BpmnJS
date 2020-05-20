@@ -61,6 +61,7 @@ customConnecteNodes:Array,自定义连接点,
         sourceID:'usertask_1253234441636155392',
         targetID:'usertask_1253312880087011335',
         id:'sequenceflow_1253312880087011391'
+        label:'test'
       },
     ]
 **/

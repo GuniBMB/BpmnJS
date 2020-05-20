@@ -82,14 +82,14 @@
             /**
              * 自定义节点连线
              * */
-            createCustomConnect(sourceID,targetID,attrs){
+            createCustomConnect(sourceID,targetID,attrs,label){
                 try {
-                    let source = undefined,target = undefined,elementRegistry = undefined,elementFactory = undefined,modeling=undefined ;
-                    elementRegistry = this.bpmnModeler.get('elementRegistry');
-                    elementFactory = this.bpmnModeler.get('elementFactory');
-                    modeling = this.bpmnModeler.get('modeling');
-                    source = elementRegistry.get(sourceID);
-                    target =  elementRegistry.get(targetID);
+
+                    let elementRegistry = this.bpmnModeler.get('elementRegistry');
+                    // let elementFactory = this.bpmnModeler.get('elementFactory');
+                    let modeling = this.bpmnModeler.get('modeling');
+                    let source = elementRegistry.get(sourceID);
+                    let target =  elementRegistry.get(targetID);
                    /* *
                     创建连接之前需要判断当前两个节点的连接线是否已存在，
                     如果存在则不创建,反之则创建连线
@@ -100,8 +100,7 @@
                        return;
                     }else {
                         let cusConnect = modeling.connect(source, target, attrs, null);
-                        // cusConnect.labels.add('test')
-
+                        modeling.updateLabel(cusConnect,label);
                     }
 
                 }catch (e) {
@@ -204,7 +203,10 @@
                             markerHeight:"10",
                             orient:"auto",
                         });
-                        let path = svgCreate('path');
+                        let path = svgCreate('path',{
+                            d:'M 1 5 L 11 10 L 1 15 Z',
+                            style:`fill: ${color}; stroke-width: 1px; stroke-linecap: round; stroke-dasharray: 10000, 1; stroke:${color};`
+                        });
 
                         marker.append(path);
                         defs.append(marker);
@@ -224,12 +226,14 @@
                             markerHeight:"10",
                             orient:"auto",
                         });
-                        let path = svgCreate('path');
+                        let path = svgCreate('path',{
+                            d:'M 1 5 L 11 10 L 1 15 Z',
+                            style:`fill: ${color}; stroke-width: 1px; stroke-linecap: round; stroke-dasharray: 10000, 1; stroke:${color};`
+                        });
 
                         marker.append(path);
                         defs.append(marker);
                         parentGfx.append(defs);
-
                         svgAttr(connection, 'stroke',color);
                         svgAttr(connection, 'stroke-dasharray','5,5');
                         svgAttr(connection, 'marker-end',`url("#${markerID}")`);
@@ -273,7 +277,8 @@
                             type: "bpmn:SequenceFlow",
                             // label:'test'
                         };
-                        this.createCustomConnect(e.sourceID,e.targetID,attrs)
+                        let label = e.label;
+                        this.createCustomConnect(e.sourceID,e.targetID,attrs,label)
                     })
                 }
             }
